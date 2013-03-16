@@ -1,0 +1,35 @@
+{
+    "name": "illagrenan/nette-navigation-control",
+    "description": "Control pro Nette Framework usnadňující tvorbu menu a drobečkové navigace",
+    "keywords": ["nette", "breadcrumbs"],
+    "type": "library",
+    "homepage": "https://github.com/illagrenan/nette-navigation-control",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jan Marek",
+            "email": "mail@janmarek.net",
+            "homepage": "http://www.janmarek.net/",
+            "role": "Author"
+        },
+        {
+            "name": "Vašek Dohnal",
+            "email": "info@vaclavdohnal.cz",
+            "homepage": "http://www.vaclavdohnal.cz",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "support@vaclavdohnal.cz",
+        "forum": "https://github.com/illagrenan/nette-navigation-control/issues"
+    },
+    "require": {
+        "php": ">=5.3.0",
+        "nette/nette": "@dev"
+    },
+    "autoload": {
+        "psr-0": {
+            "Illagrenan\\Navigation\\": "src/"
+        }
+    }
+}
