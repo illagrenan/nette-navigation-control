@@ -53,7 +53,7 @@ class NavigationNode extends Container
 
         if ($current)
         {
-            $this->lookup('Navigation\Navigation')->setCurrentNode($this);
+            $this->lookup('\Illagrenan\Navigation')->setCurrentNode($this);
         }
 
         return $this;

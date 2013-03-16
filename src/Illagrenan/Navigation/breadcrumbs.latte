@@ -1,9 +1,12 @@
-<div class="control breadcrumbs">
+<ul class="breadcrumb">
 	{foreach $items as $item}
 		{if $iterator->isLast()}
-			<span class="current">{$item->label}</span>
+			<li class="active">{$item->label}</li>
 		{else}
-			<a href="{$item->url}">{$item->label}</a> &rarr;
+			<li>
+                            <a href="{$item->url}">{$item->label}</a>
+                            <span class="divider">/</span>
+                        </li>
 		{/if}
 	{/foreach}
-</div>
+</ul>
