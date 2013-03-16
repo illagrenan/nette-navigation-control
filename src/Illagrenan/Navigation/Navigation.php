@@ -87,7 +87,7 @@ class Navigation extends Control
     public function renderMenu($renderChildren = TRUE, $base = NULL, $renderHomepage = TRUE)
     {
         $template                 = $this->createTemplate()
-                ->setFile($this->menuTemplate ? : __DIR__ . '/menu.phtml');
+                ->setFile($this->menuTemplate ? : __DIR__ . '/menu.latte');
         $template->homepage       = $base ? $base : $this->getComponent('homepage');
         $template->useHomepage    = $this->useHomepage && $renderHomepage;
         $template->renderChildren = $renderChildren;
@@ -137,7 +137,7 @@ class Navigation extends Control
         }
 
         $template = $this->createTemplate()
-                ->setFile($this->breadcrumbsTemplate ? : __DIR__ . '/breadcrumbs.phtml');
+                ->setFile($this->breadcrumbsTemplate ? : __DIR__ . '/breadcrumbs.latte');
 
         $template->items = $items;
         $template->render();
