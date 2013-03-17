@@ -1,0 +1,12 @@
+<ul class="breadcrumb">
+	{foreach $items as $item}
+		{if $iterator->isLast()}
+			<li class="active">{$item->getLabel()}</li>
+		{else}
+			<li>
+                            <a href="{$item->url}">{$item->getLabel()}</a>
+                            <span class="divider">/</span>
+                        </li>
+		{/if}
+	{/foreach}
+</ul>

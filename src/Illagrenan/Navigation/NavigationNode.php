@@ -1,61 +1,107 @@
 <?php
 
-/**
- * Navigation node
- *
- * @author Jan Marek
- * @license MIT
- */
-
 namespace Illagrenan\Navigation;
 
 use Nette\ComponentModel\Container;
 
+/**
+ * @license http://opensource.org/licenses/MIT MIT
+ * @author Jan Marek <mail@janmarek.net>
+ * @author Vašek Dohnal <hello@vaclavdohnal.cz>
+ */
 class NavigationNode extends Container
 {
 
-    /** @var string */
-    public $label;
-
-    /** @var string */
-    public $url;
-
-    /** @var bool */
-    public $isCurrent = false;
+    /**
+     * @var string
+     */
+    private $label;
 
     /**
-     * Add navigation node as a child
-     * @staticvar int $counter
+     * @var string
+     */
+    private $url;
+
+    /**
+     * @var bool
+     */
+    private $isCurrent;
+
+    /**
      * @param string $label
      * @param string $url
-     * @return NavigationNode
      */
-    public function add($label, $url)
+    function __construct($label, $url)
     {
-        $navigationNode        = new self;
-        $navigationNode->label = $label;
-        $navigationNode->url   = $url;
+        $this->label     = $label;
+        $this->url       = $url;
+        $this->isCurrent = FALSE;
+    }
+
+    /**
+     * @staticvar type $counter
+     * @param type $label
+     * @param type $url
+     * @return \Illagrenan\Navigation\NavigationNode
+     */
+    public function addNode($label, $url)
+    {
+        $navigationNode = new NavigationNode($label, $url);
 
         static $counter;
+
         $this->addComponent($navigationNode, ++$counter);
 
         return $navigationNode;
     }
 
-    /**
-     * Set node as current
-     * @param bool $current
-     * @return \Navigation\NavigationNode
-     */
-    public function setCurrent($current)
+    /*
+     * @return \Illagrenan\Navigation\NavigationNode
+      public function setCurrent()
+      {
+      $this->isCurrent = TRUE;
+      $this->lookup('\Illagrenan\Navigation')->setCurrentNode($this);
+
+      return $this;
+      }
+     * */
+
+    public function setNotCurrent()
     {
-        $this->isCurrent = $current;
+        $this->isCurrent = FALSE;
+        return $this;
+    }
 
-        if ($current)
-        {
-            $this->lookup('\Illagrenan\Navigation')->setCurrentNode($this);
-        }
+    public function getLabel()
+    {
+        return $this->label;
+    }
 
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    public function isCurrent()
+    {
+        return $this->isCurrent;
+    }
+
+    public function setLabel($label)
+    {
+        $this->label = $label;
+        return $this;
+    }
+
+    public function setUrl($url)
+    {
+        $this->url = $url;
+        return $this;
+    }
+
+    public function setCurrent()
+    {
+        $this->isCurrent = TRUE;
         return $this;
     }
 

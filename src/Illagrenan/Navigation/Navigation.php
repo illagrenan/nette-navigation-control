@@ -1,33 +1,81 @@
 <?php
 
-/**
- * Navigation
- *
- * @author Jan Marek
- * @license MIT
- */
-
 namespace Illagrenan\Navigation;
 
+use Nette\Application\IPresenter;
 use Nette\Application\UI\Control;
+use Nette\Utils\Strings;
 
+/**
+ * @license http://opensource.org/licenses/MIT MIT
+ * @author Jan Marek <mail@janmarek.net>
+ * @author Vašek Dohnal <hello@vaclavdohnal.cz>
+ */
 class Navigation extends Control
 {
 
-    /** @var NavigationNode */
+    /**
+     * Node držící homepage
+     * @var NavigationNode
+     */
     private $homepage;
 
-    /** @var NavigationNode */
-    private $current;
+    /**
+     * Aktuální Node
+     * @var NavigationNode
+     */
+    private $currentNode;
 
-    /** @var bool */
+    /**
+     * Používat homepage?
+     * @var bool
+     */
     private $useHomepage = false;
 
-    /** @var string */
+    /**
+     * Šablona menu
+     * @var string
+     */
     private $menuTemplate;
 
-    /** @var string */
+    /**
+     * Šablona drobečkové navigace
+     * @var string
+     */
     private $breadcrumbsTemplate;
+
+    /**
+     * Klíč pro komponentu "homepage"
+     */
+
+    const HOMEPAGE_COMPONENT_NAME = "homepage";
+
+    /**
+     * Koncovka latte šablon
+     */
+    const LATTE_EXTEMSION = ".latte";
+
+    /**
+     * Výchozí cesta úložiště šablon
+     */
+    const DEFAULT_TEMPLATE_PATH = "templates";
+
+    /**
+     * Cesta k šablonám
+     * @var string
+     */
+    private $templatePath;
+
+    /**
+     * @param \Nette\Application\IPresenter $parent
+     * @param type $name
+     */
+    public function __construct(IPresenter $parent = NULL, $name = NULL)
+    {
+        parent::__construct($parent, $name);
+
+        $this->templatePath = __DIR__ . "/" . self::DEFAULT_TEMPLATE_PATH . "/";
+    }
 
     /**
      * Set node as current
@@ -35,12 +83,14 @@ class Navigation extends Control
      */
     public function setCurrentNode(NavigationNode $node)
     {
-        if (isset($this->current))
+        if (isset($this->currentNode))
         {
-            $this->current->isCurrent = false;
+            $this->currentNode->setNotCurrent();
         }
-        $node->isCurrent          = true;
-        $this->current            = $node;
+
+        $node->setCurrent();
+
+        $this->currentNode = $node;
     }
 
     /**
@@ -49,9 +99,9 @@ class Navigation extends Control
      * @param string $url
      * @return NavigationNode
      */
-    public function add($label, $url)
+    public function addNode($label, $url)
     {
-        return $this->getComponent('homepage')->add($label, $url);
+        return $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->addNode($label, $url);
     }
 
     /**
@@ -60,87 +110,24 @@ class Navigation extends Control
      * @param string $url
      * @return NavigationNode
      */
-    public function setupHomepage($label, $url)
+    public function addHomepage($label, $url)
     {
-        $homepage          = $this->getComponent('homepage');
-        $homepage->label   = $label;
-        $homepage->url     = $url;
+        /* @var $homepage NavigationNode */
+        $homepage = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME);
+
+        $homepage->setLabel($label)->setUrl($url);
+
         $this->useHomepage = true;
         return $homepage;
     }
 
     /**
-     * Homepage factory
-     * @param string $name
+     * @param type $name
+     * @return \Illagrenan\Navigation\NavigationNode
      */
     protected function createComponentHomepage($name)
     {
-        new NavigationNode($this, $name);
-    }
-
-    /**
-     * Render menu
-     * @param bool $renderChildren
-     * @param NavigationNode $base
-     * @param bool $renderHomepage
-     */
-    public function renderMenu($renderChildren = TRUE, $base = NULL, $renderHomepage = TRUE)
-    {
-        $template                 = $this->createTemplate()
-                ->setFile($this->menuTemplate ? : __DIR__ . '/menu.latte');
-        $template->homepage       = $base ? $base : $this->getComponent('homepage');
-        $template->useHomepage    = $this->useHomepage && $renderHomepage;
-        $template->renderChildren = $renderChildren;
-        $template->children       = $this->getComponent('homepage')->getComponents();
-        $template->render();
-    }
-
-    /**
-     * Render full menu
-     */
-    public function render()
-    {
-        $this->renderMenu();
-    }
-
-    /**
-     * Render main menu
-     */
-    public function renderMainMenu()
-    {
-        $this->renderMenu(FALSE);
-    }
-
-    /**
-     * Render breadcrumbs
-     */
-    public function renderBreadcrumbs()
-    {
-        if (empty($this->current))
-        {
-            return;
-        }
-
-        $items = array();
-        $node  = $this->current;
-
-        while ($node instanceof NavigationNode)
-        {
-            $parent = $node->getParent();
-            if (!$this->useHomepage && !($parent instanceof NavigationNode))
-            {
-                break;
-            }
-
-            array_unshift($items, $node);
-            $node = $parent;
-        }
-
-        $template = $this->createTemplate()
-                ->setFile($this->breadcrumbsTemplate ? : __DIR__ . '/breadcrumbs.latte');
-
-        $template->items = $items;
-        $template->render();
+        return new NavigationNode($this, $name);
     }
 
     /**
@@ -164,7 +151,138 @@ class Navigation extends Control
      */
     public function getCurrentNode()
     {
-        return $this->current;
+        return $this->currentNode;
+    }
+
+    /* ----------------------------------------------
+     * *** RENDER METHODS ***
+     * ---------------------------------------------- */
+
+    /**
+     * Vykreslí celé menu
+     * <code>
+     * {widget navigation}
+     * </code>
+     */
+    public function render()
+    {
+        $this->renderMenu();
+    }
+
+    /**
+     * Vykreslí hlavní menu
+     * <code>
+     * {widget navigation:mainMenu}
+     * </code>
+     */
+    public function renderMainMenu()
+    {
+        $this->renderMenu(FALSE);
+    }
+
+    /**
+     * Vykreslí drobečkovou navigaci
+     * <code>
+     * {widget navigation:breadcrumbs}
+     * </code>
+     */
+    public function renderBreadcrumbs()
+    {
+        // Nemáme aktivní stránku
+        if (empty($this->currentNode))
+        {
+            return;
+        }
+
+        $breadcrumbsQueue = array();
+        $currentNode      = $this->currentNode;
+
+        while ($currentNode instanceof NavigationNode)
+        {
+            $parentNode = $currentNode->getParent();
+
+            if (!$this->useHomepage && !($parentNode instanceof NavigationNode))
+            {
+                break;
+            }
+
+            array_unshift($breadcrumbsQueue, $currentNode);
+
+            $currentNode = $parentNode;
+        }
+
+        $template = $this->createBreadcrumbsTemplate();
+
+        $template->items = $breadcrumbsQueue;
+        $template->render();
+    }
+
+    /**
+     * Render menu
+     * @param bool $renderChildren
+     * @param NavigationNode $base
+     * @param bool $renderHomepage
+     */
+    public function renderMenu($renderChildren = TRUE, $base = NULL, $renderHomepage = TRUE)
+    {
+        $template = $this->createMenuTemplate();
+
+        $template->homepage       = $base ? $base : $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, true);
+        $template->useHomepage    = $this->useHomepage && $renderHomepage;
+        $template->renderChildren = $renderChildren;
+        $template->children       = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->getComponents();
+
+        $template->render();
+    }
+
+    /* ----------------------------------------------
+     * *** TVORBA ŠABLON ***
+     * ---------------------------------------------- */
+
+    private function createMenuTemplate()
+    {
+        /* @var $template ITemplate */
+        $template = $this->createTemplate();
+
+        if ($this->menuTemplate)
+        {
+            $template->setFile($this->menuTemplate);
+        }
+        else
+        {
+            $menuTemplatePath = $this->getTemplatePath("menu");
+            $template->setFile($menuTemplatePath);
+        }
+
+        return $template;
+    }
+
+    private function createBreadcrumbsTemplate()
+    {
+        /* @var $template ITemplate */
+        $template = $this->createTemplate();
+
+        if ($this->breadcrumbsTemplate)
+        {
+            $template->setFile($this->breadcrumbsTemplate);
+        }
+        else
+        {
+            $menuTemplatePath = $this->getTemplatePath("breadcrumbs");
+            $template->setFile($menuTemplatePath);
+        }
+
+        return $template;
+    }
+
+    private function getTemplatePath($templateName)
+    {
+        if (Strings::endsWith($templateName, self::LATTE_EXTEMSION) == FALSE)
+        {
+            $templateName = $templateName . self::LATTE_EXTEMSION;
+        }
+
+        return $this->templatePath . $templateName;
     }
 
 }
