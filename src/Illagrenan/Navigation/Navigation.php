@@ -4,6 +4,9 @@ namespace Illagrenan\Navigation;
 
 use Nette\Application\IPresenter;
 use Nette\Application\UI\Control;
+use Nette\Application\UI\InvalidLinkException;
+use Nette\ComponentModel\RecursiveComponentIterator;
+use Nette\Http\Request;
 use Nette\Utils\Strings;
 
 /**
@@ -67,14 +70,20 @@ class Navigation extends Control
     private $templatePath;
 
     /**
-     * @param \Nette\Application\IPresenter $parent
+     * @var Request
+     */
+    private $httpRequest;
+
+    /**
+     * @param IPresenter $parent
      * @param type $name
      */
-    public function __construct(IPresenter $parent = NULL, $name = NULL)
+    public function __construct(IPresenter $parent = NULL, $name = NULL, Request $httpRequest = NULL)
     {
         parent::__construct($parent, $name);
 
         $this->templatePath = __DIR__ . "/" . self::DEFAULT_TEMPLATE_PATH . "/";
+        $this->httpRequest  = $httpRequest;
     }
 
     /**
@@ -100,7 +109,28 @@ class Navigation extends Control
      */
     public function addNode($label, $url)
     {
+        $url = $this->tryParsePlink($url);
+
         return $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->addNode($label, $url);
+    }
+
+    private function tryParsePlink($url)
+    {
+        try
+        {
+            $netteLink = $this->presenter->link($url);
+        }
+        catch (InvalidLinkException $exc)
+        {
+            $netteLink = FALSE;
+        }
+
+        if ($netteLink != FALSE && Strings::startsWith($netteLink, "error") == FALSE)
+        {
+            return $netteLink;
+        }
+
+        return $url;
     }
 
     /**
@@ -114,6 +144,7 @@ class Navigation extends Control
         /* @var $homepage NavigationNode */
         $homepage = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME);
 
+        $url = $this->tryParsePlink($url);
         $homepage->setLabel($label)->setUrl($url);
 
         $this->useHomepage = true;
@@ -188,6 +219,33 @@ class Navigation extends Control
         return $breadcrumbsQueue;
     }
 
+    /**
+     * Najdi aktuální Node z httpRequestu
+     * @param RecursiveComponentIterator $components
+     * @param \Illagrenan\Navigation\NavigationNode $base
+     * @return \Illagrenan\Navigation\NavigationNode|boolean
+     */
+    private function findCurrent(RecursiveComponentIterator $components, NavigationNode $base)
+    {
+        $currentUrl = $this->httpRequest->getUrl();
+
+        /* @var $oneNode NavigationNode */
+        foreach ($components as $oneNode)
+        {
+            if ($currentUrl->isEqual($oneNode->getUrl()))
+            {
+                return $oneNode;
+            }
+        }
+
+        if ($currentUrl->isEqual($base->getUrl()))
+        {
+            return $base;
+        }
+
+        return FALSE;
+    }
+
     /* ----------------------------------------------
      * *** RENDER METHODS ***
      * ---------------------------------------------- */
@@ -246,15 +304,34 @@ class Navigation extends Control
      * @param NavigationNode $base
      * @param bool $renderHomepage
      */
-    public function renderMenu($renderChildren = TRUE, $base = NULL, $renderHomepage = TRUE)
+    public function renderMenu($renderChildren = TRUE, NavigationNode $base = NULL, $renderHomepage = TRUE)
     {
+        /* @var $template ITemplate */
         $template = $this->createMenuTemplate();
+
+        if ($base == NULL)
+        {
+            $base = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE);
+        }
+
+        $allComponents = $base->getComponents();
+
+        if ($this->httpRequest != NULL)
+        {
+            /* @var $current NavigationNode */
+            $current = $this->findCurrent($allComponents, $base);
+
+            if ($current)
+            {
+                $this->setCurrentNode($current);
+            }
+        }
 
         $template->controlName    = $this->getName();
         $template->homepage       = $base ? $base : $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, true);
         $template->useHomepage    = $this->useHomepage && $renderHomepage;
         $template->renderChildren = $renderChildren;
-        $template->children       = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->getComponents();
+        $template->children       = $allComponents;
 
         $template->render();
     }
