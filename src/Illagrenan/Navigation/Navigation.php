@@ -153,6 +153,41 @@ class Navigation extends Control
         return $this->currentNode;
     }
 
+    private function getBreadcrumbsPathForCurrentNode()
+    {
+        /* @var $tempCurrentNode NavigationNode */
+        $tempCurrentNode = $this->currentNode;
+
+        /* @var $breadcrumbsQueue NavigationNode[] */
+        $breadcrumbsQueue = array();
+
+        /*
+         *  Začínáme od poslední (aktivní) a dotazujeme se
+         *  až ke kořeni stromu na rodiče
+         */
+        while ($tempCurrentNode instanceof NavigationNode)
+        {
+            // Rodič akutálně zpracovávané Node
+            $parentNode = $tempCurrentNode->getParent();
+
+            /* Pokud nemáme používat homepage a rodič je typu Navigation, jsme u kořene a končíme
+             * (homepage tedy do drobečkové navigace nepřidáváme) */
+            if (!$this->useHomepage && !($parentNode instanceof NavigationNode))
+            {
+                break;
+            }
+
+            /*
+             * Na začátek fronty s drobečkovou navigací připojíme aktuální Node
+             */
+            array_unshift($breadcrumbsQueue, $tempCurrentNode);
+
+            $tempCurrentNode = $parentNode;
+        }
+
+        return $breadcrumbsQueue;
+    }
+
     /* ----------------------------------------------
      * *** RENDER METHODS ***
      * ---------------------------------------------- */
@@ -193,26 +228,15 @@ class Navigation extends Control
             return;
         }
 
-        $breadcrumbsQueue = array();
-        $currentNode      = $this->currentNode;
+        /* @var $breadcrumbsQueue NavigationNode[] */
+        $breadcrumbsQueue = $this->getBreadcrumbsPathForCurrentNode();
 
-        while ($currentNode instanceof NavigationNode)
-        {
-            $parentNode = $currentNode->getParent();
-
-            if (!$this->useHomepage && !($parentNode instanceof NavigationNode))
-            {
-                break;
-            }
-
-            array_unshift($breadcrumbsQueue, $currentNode);
-
-            $currentNode = $parentNode;
-        }
-
+        /* @var $template ITemplate */
         $template = $this->createBreadcrumbsTemplate();
 
-        $template->items = $breadcrumbsQueue;
+        $template->controlName = $this->getName();
+        $template->items       = $breadcrumbsQueue;
+
         $template->render();
     }
 
@@ -226,6 +250,7 @@ class Navigation extends Control
     {
         $template = $this->createMenuTemplate();
 
+        $template->controlName    = $this->getName();
         $template->homepage       = $base ? $base : $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, true);
         $template->useHomepage    = $this->useHomepage && $renderHomepage;
         $template->renderChildren = $renderChildren;

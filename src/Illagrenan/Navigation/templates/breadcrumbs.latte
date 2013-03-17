@@ -1,4 +1,15 @@
-<ul class="breadcrumb">
+{**
+   * Šablona drobečkové navigace.
+   *
+   * @license http://opensource.org/licenses/MIT MIT
+   * @author Jan Marek <mail@janmarek.net>
+   * @author Vašek Dohnal <hello@vaclavdohnal.cz>
+   *
+   * @param string              $controlName    Název Controlu pro CSS
+   * @param NavigationNode[]    $items          Pole Nodes 
+*}
+
+<ul class="nav-control-breadcrumb {$controlName}">
 	{foreach $items as $item}
 		{if $iterator->isLast()}
 			<li class="active">{$item->getLabel()}</li>

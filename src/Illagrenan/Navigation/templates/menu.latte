@@ -1,13 +1,26 @@
-<ul class="control menu">
+{**
+   * Šablona navigačního menu.
+   *
+   * @license http://opensource.org/licenses/MIT MIT
+   * @author Jan Marek <mail@janmarek.net>
+   * @author Vašek Dohnal <hello@vaclavdohnal.cz>
+   *
+   * @param string              $controlName    Název Controlu pro CSS
+   * @param NavigationNode      $homepage       Homepage
+   * @param bool                $useHomepage    Mám vykreslit homepage?
+   * @param NavigationNode[]    $children       Děti Nodes nad kterými budeme iterovat
+*}
+
+<ul class="nav-control-menu {$controlName}">
 	{if $useHomepage}
-        <li{if $homepage->isCurrent()} class="active"{/if}>
+        <li class="nav-{$homepage->getLabel()|webalize}{if $homepage->isCurrent()} active{/if}">
 		<a href="{$homepage->getUrl()}">{$homepage->getLabel()}</a>
 	</li>
         {/if}
 
 	{block #menu}
             {foreach $children as $item}
-            <li{if $item->isCurrent()} class="active"{/if}>
+            <li class="nav-{$item->getLabel()|webalize}{if $item->isCurrent()} active{/if}">
                     <a href="{$item->getUrl()}">{$item->getLabel()}</a>
 
                     {if $renderChildren && count($item->getComponents()) > 0}
