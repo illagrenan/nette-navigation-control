@@ -114,7 +114,7 @@ class Navigation extends Control
         return $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->addNode($label, $url);
     }
 
-    private function tryParsePlink($url)
+    public function tryParsePlink($url)
     {
         try
         {
@@ -225,7 +225,7 @@ class Navigation extends Control
      * @param \Illagrenan\Navigation\NavigationNode $base
      * @return \Illagrenan\Navigation\NavigationNode|boolean
      */
-    private function findCurrent(RecursiveComponentIterator $components, NavigationNode $base)
+    private function findCurrent(\RecursiveIteratorIterator $components, NavigationNode $base)
     {
         $currentUrl = $this->httpRequest->getUrl();
 
@@ -301,7 +301,7 @@ class Navigation extends Control
     /**
      * Render menu
      * @param bool $renderChildren
-     * @param NavigationNode $base
+     * @param $base
      * @param bool $renderHomepage
      */
     public function renderMenu($renderChildren = TRUE, NavigationNode $base = NULL, $renderHomepage = TRUE)
@@ -314,12 +314,14 @@ class Navigation extends Control
             $base = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE);
         }
 
-        $allComponents = $base->getComponents();
-
+        
+        $allComponents = $base->getComponents();        
+        
         if ($this->httpRequest != NULL)
-        {
+        {          
+            // TRUE = yes, getComponents recursively
             /* @var $current NavigationNode */
-            $current = $this->findCurrent($allComponents, $base);
+            $current = $this->findCurrent($base->getComponents(TRUE), $base);
 
             if ($current)
             {

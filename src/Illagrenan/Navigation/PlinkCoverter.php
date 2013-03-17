@@ -53,11 +53,6 @@ class NavigationNode extends Container
      */
     public function addNode($label, $url)
     {
-
-        /* @var $homepageComponent Navigation */
-        $homepageComponent = $this->lookup("Illagrenan\Navigation\Navigation", FALSE);
-        $url               = $homepageComponent->tryParsePlink($url);
-
         $newNavigationNode = new NavigationNode($label, $url);
 
         static $counter;
@@ -67,13 +62,16 @@ class NavigationNode extends Container
         return $newNavigationNode;
     }
 
-    public function thisIsCurrent()
-    {
-        $this->setCurrent();
-        $this->lookup('Illagrenan\Navigation\Navigation')->setCurrentNode($this);
+    /*
+     * @return \Illagrenan\Navigation\NavigationNode
+      public function setCurrent()
+      {
+      $this->isCurrent = TRUE;
+      $this->lookup('\Illagrenan\Navigation')->setCurrentNode($this);
 
-        return $this;
-    }
+      return $this;
+      }
+     * */
 
     public function getIsCurrent()
     {
