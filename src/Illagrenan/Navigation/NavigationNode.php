@@ -3,6 +3,8 @@
 namespace Illagrenan\Navigation;
 
 use Nette\ComponentModel\Container;
+use Nette\Utils\Strings;
+use Nette\Utils\Validators;
 
 /**
  * @license http://opensource.org/licenses/MIT MIT
@@ -28,6 +30,11 @@ class NavigationNode extends Container
     private $isCurrent;
 
     /**
+     * @var string[]
+     */
+    private $specialClass = array();
+
+    /**
      * @param string $label
      * @param string $url
      */
@@ -39,9 +46,9 @@ class NavigationNode extends Container
     }
 
     /**
-     * @staticvar type $counter
-     * @param type $label
-     * @param type $url
+     * @staticvar int $counter
+     * @param string $label
+     * @param string $url
      * @return \Illagrenan\Navigation\NavigationNode
      */
     public function addNode($label, $url)
@@ -65,6 +72,44 @@ class NavigationNode extends Container
       return $this;
       }
      * */
+
+    public function getIsCurrent()
+    {
+        return $this->isCurrent;
+    }
+
+    public function setIsCurrent($isCurrent)
+    {
+        $this->isCurrent = $isCurrent;
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getSpecialClass()
+    {
+        return $this->specialClass;
+    }
+
+    /**
+     * @param string $specialClass
+     * @return \Illagrenan\Navigation\NavigationNode
+     */
+    public function addSpecialClass($specialClass)
+    {
+        if (Validators::isUnicode($specialClass) === FALSE)
+        {
+            throw new Exceptions\InvalidSpecialClassException("Given \"" . $specialClass . "\" is not valid special class.");
+        }
+
+        $specialClass = Strings::trim($specialClass);
+        $specialClass = Strings::normalize($specialClass);
+        $specialClass = Strings::toAscii($specialClass);
+
+        $this->specialClass[] = $specialClass;
+        return $this;
+    }
 
     public function setNotCurrent()
     {

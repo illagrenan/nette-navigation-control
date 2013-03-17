@@ -20,7 +20,7 @@
 
 	{block #menu}
             {foreach $children as $item}
-            <li class="nav-{$item->getLabel()|webalize}{if $item->isCurrent()} active{/if}">
+            <li class="nav-{$item->getLabel()|webalize}{if $item->isCurrent()} active{/if}{if count($item->getSpecialClass()) > 0} {$item->getSpecialClass()|implode}{/if}">
                     <a href="{$item->getUrl()}">{$item->getLabel()}</a>
 
                     {if $renderChildren && count($item->getComponents()) > 0}
