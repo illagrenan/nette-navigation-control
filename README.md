@@ -33,13 +33,11 @@ protected function createComponentNavigation($name)
     $sitemap[2]["name"]  = "Diskuze";
     $sitemap[2]["plink"] = "Discussion:list";
 
-
     for ($index = 0; $index < count($sitemap); $index++)
     {
         /* @var $added \Illagrenan\Navigation\NavigationNode */
 
         $link = $this->link($sitemap[$index]["plink"]);
-
         $name = $sitemap[$index]["name"];
 
         if ($index == 0)
