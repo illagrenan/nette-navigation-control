@@ -89,7 +89,6 @@ class Navigation extends Control
         }
 
         $node->setCurrent();
-
         $this->currentNode = $node;
     }
 
