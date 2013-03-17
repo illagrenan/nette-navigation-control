@@ -9,7 +9,7 @@
    * @param NavigationNode[]    $items          Pole Nodes 
 *}
 
-<ul class="nav-control-breadcrumb {$controlName}">
+<ul class="nav-control-breadcrumb breadcrumb {$controlName}">
 	{foreach $items as $item}
 		{if $iterator->isLast()}
 			<li class="active">{$item->getLabel()}</li>
