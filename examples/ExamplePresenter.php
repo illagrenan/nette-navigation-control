@@ -28,8 +28,6 @@ class ExamplePresenter extends Nette\Application\UI\Presenter
         $administration->addNode("Správa diskuzí", "Admin:manageDiscussion");
         $administration->addNode("Správa tagů", "Admin:manageTags");
 
-        $this->administrationNode = $administration;
-
         return $navigation;
     }
 }

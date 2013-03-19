@@ -33,8 +33,6 @@ protected function createComponentNavigation($name)
     $administration->addNode("Správa diskuzí", "Admin:manageDiscussion");
     $administration->addNode("Správa tagů", "Admin:manageTags");
 
-    $this->administrationNode = $administration;
-
     return $navigation;
 }
 ?>
