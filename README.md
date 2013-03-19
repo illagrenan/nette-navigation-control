@@ -7,8 +7,8 @@ Licence: MIT
 ```json
 {
 	"require": {
-	    "illagrenan/nette-navigation-control": "dev-master"
-	}
+        "illagrenan/nette-navigation-control": "dev-master"
+    }
 }
 ```
 
@@ -20,40 +20,23 @@ Licence: MIT
 <?php
 protected function createComponentNavigation($name)
 {
-    $nav = new \Illagrenan\Navigation\Navigation($this, $name);
+    $navigation = new \Illagrenan\Navigation\Navigation($this, $name, $this->httpRequest);
 
-    $sitemap = array();
+    $navigation->addHomepage("Přehled obsahu", "Homepage:default");
+    $navigation->addNode("Materiály", "Publishable:list");
+    $navigation->addNode("Diskuze", "Discussion:list");
 
-    $sitemap[0]["name"]  = "Přehled obsahu";
-    $sitemap[0]["plink"] = "Homepage:default";
+    $administration = $navigation->addNode("Administrace", "Admin:default")
+                        ->addSpecialClass("special");
 
-    $sitemap[1]["name"]  = "Materiály";
-    $sitemap[1]["plink"] = "Source:list";
+    $administration->addNode("Vytvořit obsah", "Admin:createPublishable");
+    $administration->addNode("Správa diskuzí", "Admin:manageDiscussion");
+    $administration->addNode("Správa tagů", "Admin:manageTags");
 
-    $sitemap[2]["name"]  = "Diskuze";
-    $sitemap[2]["plink"] = "Discussion:list";
+    $this->administrationNode = $administration;
 
-    for ($index = 0; $index < count($sitemap); $index++)
-    {
-        /* @var $added \Illagrenan\Navigation\NavigationNode */
-
-        $link = $this->link($sitemap[$index]["plink"]);
-        $name = $sitemap[$index]["name"];
-
-        if ($index == 0)
-        {
-            $added = $nav->addHomepage($name, $link);
-        }
-        else
-        {
-            $added = $nav->addNode($name, $link);
-        }
-
-        if ($this->httpRequest->getUrl()->isEqual($link))
-        {
-            $nav->setCurrentNode($added);
-        }
-    }
+    return $navigation;
+}
 ?>
 ```
 
