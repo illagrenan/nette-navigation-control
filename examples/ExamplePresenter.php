@@ -1,14 +1,19 @@
 <?php
 
-class ExamplePresenter extends Nette\Application\UI\Presenter
+namespace Illagrenan\Navigation\Example;
+
+use Nette\Application\UI\Presenter;
+use Nette\Http\Request;
+
+class ExamplePresenter extends Presenter
 {
 
     /**
-     * @var \Nette\Http\Request
+     * @var Request
      */
     protected $httpRequest;
 
-    public function injectRequest(\Nette\Http\Request $request)
+    public function injectRequest(Request $request)
     {
         $this->httpRequest = $request;
     }

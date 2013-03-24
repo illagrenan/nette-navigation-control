@@ -2,19 +2,20 @@
 
 namespace Illagrenan\Navigation;
 
+use Illagrenan\BaseControl\BaseControl;
 use Nette\Application\IPresenter;
-use Nette\Application\UI\Control;
 use Nette\Application\UI\InvalidLinkException;
 use Nette\ComponentModel\RecursiveComponentIterator;
 use Nette\Http\Request;
 use Nette\Utils\Strings;
+use RecursiveIteratorIterator;
 
 /**
  * @license http://opensource.org/licenses/MIT MIT
  * @author Jan Marek <mail@janmarek.net>
  * @author Vašek Dohnal <hello@vaclavdohnal.cz>
  */
-class Navigation extends Control
+class Navigation extends BaseControl
 {
 
     /**
@@ -54,22 +55,6 @@ class Navigation extends Control
     const HOMEPAGE_COMPONENT_NAME = "homepage";
 
     /**
-     * Koncovka latte šablon
-     */
-    const LATTE_EXTEMSION = ".latte";
-
-    /**
-     * Výchozí cesta úložiště šablon
-     */
-    const DEFAULT_TEMPLATE_PATH = "templates";
-
-    /**
-     * Cesta k šablonám
-     * @var string
-     */
-    private $templatePath;
-
-    /**
      * @var Request
      */
     private $httpRequest;
@@ -81,9 +66,7 @@ class Navigation extends Control
     public function __construct(IPresenter $parent = NULL, $name = NULL, Request $httpRequest = NULL)
     {
         parent::__construct($parent, $name);
-
-        $this->templatePath = __DIR__ . "/" . self::DEFAULT_TEMPLATE_PATH . "/";
-        $this->httpRequest  = $httpRequest;
+        $this->httpRequest = $httpRequest;
     }
 
     /**
@@ -225,7 +208,7 @@ class Navigation extends Control
      * @param \Illagrenan\Navigation\NavigationNode $base
      * @return \Illagrenan\Navigation\NavigationNode|boolean
      */
-    private function findCurrent(\RecursiveIteratorIterator $components, NavigationNode $base)
+    private function findCurrent(RecursiveIteratorIterator $components, NavigationNode $base)
     {
         $currentUrl = $this->httpRequest->getUrl();
 
@@ -290,7 +273,7 @@ class Navigation extends Control
         $breadcrumbsQueue = $this->getBreadcrumbsPathForCurrentNode();
 
         /* @var $template ITemplate */
-        $template = $this->createBreadcrumbsTemplate();
+        $template = $this->createTemplateFromName("breadcrumbs");
 
         $template->controlName = $this->getName();
         $template->items       = $breadcrumbsQueue;
@@ -307,18 +290,18 @@ class Navigation extends Control
     public function renderMenu($renderChildren = TRUE, NavigationNode $base = NULL, $renderHomepage = TRUE)
     {
         /* @var $template ITemplate */
-        $template = $this->createMenuTemplate();
+        $template = $this->createTemplateFromName("menu");
 
         if ($base == NULL)
         {
             $base = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE);
         }
 
-        
-        $allComponents = $base->getComponents();        
-        
+
+        $allComponents = $base->getComponents();
+
         if ($this->httpRequest != NULL)
-        {          
+        {
             // TRUE = yes, getComponents recursively
             /* @var $current NavigationNode */
             $current = $this->findCurrent($base->getComponents(TRUE), $base);
@@ -336,56 +319,6 @@ class Navigation extends Control
         $template->children       = $allComponents;
 
         $template->render();
-    }
-
-    /* ----------------------------------------------
-     * *** TVORBA ŠABLON ***
-     * ---------------------------------------------- */
-
-    private function createMenuTemplate()
-    {
-        /* @var $template ITemplate */
-        $template = $this->createTemplate();
-
-        if ($this->menuTemplate)
-        {
-            $template->setFile($this->menuTemplate);
-        }
-        else
-        {
-            $menuTemplatePath = $this->getTemplatePath("menu");
-            $template->setFile($menuTemplatePath);
-        }
-
-        return $template;
-    }
-
-    private function createBreadcrumbsTemplate()
-    {
-        /* @var $template ITemplate */
-        $template = $this->createTemplate();
-
-        if ($this->breadcrumbsTemplate)
-        {
-            $template->setFile($this->breadcrumbsTemplate);
-        }
-        else
-        {
-            $menuTemplatePath = $this->getTemplatePath("breadcrumbs");
-            $template->setFile($menuTemplatePath);
-        }
-
-        return $template;
-    }
-
-    private function getTemplatePath($templateName)
-    {
-        if (Strings::endsWith($templateName, self::LATTE_EXTEMSION) == FALSE)
-        {
-            $templateName = $templateName . self::LATTE_EXTEMSION;
-        }
-
-        return $this->templatePath . $templateName;
     }
 
 }
