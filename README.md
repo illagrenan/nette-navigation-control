@@ -12,6 +12,9 @@ Licence: MIT
 }
 ```
 
+**Závislosti:**
+* [illagrenan/nette-base-control](https://github.com/illagrenan/nette-base-control)
+
 ## Použití
 
 **Továrnička v presenteru:**
