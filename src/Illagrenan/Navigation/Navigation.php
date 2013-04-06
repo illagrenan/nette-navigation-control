@@ -85,6 +85,37 @@ class Navigation extends BaseControl
     }
 
     /**
+     * Setup homepage
+     * @param string $label
+     * @param string $url
+     * @return NavigationNode
+     */
+    public function addHomepage($label, $url)
+    {
+        /* @var $homepage NavigationNode */
+        $homepage = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME);
+
+        // Obsahuje FALSE, pokud se nejedná o platný plink
+        $parsedPlink = $this->tryParsePlink($url);
+
+        $homepage->setLabel($label);
+
+        // Odkaz ve tvaru Presenter:action
+        if ($parsedPlink !== FALSE)
+        {
+            $homepage->setUrl($parsedPlink);
+            $homepage->setPlink($url);
+        }
+        else // Obyčejná URL (nekontroluje se)
+        {
+            $homepage->setUrl($url);
+        }
+
+        $this->useHomepage = true;
+        return $homepage;
+    }
+
+    /**
      * Add navigation node as a child
      * @param string $label
      * @param string $url
@@ -92,11 +123,14 @@ class Navigation extends BaseControl
      */
     public function addNode($label, $url)
     {
-        $url = $this->tryParsePlink($url);
-
+        // $url = $this->tryParsePlink($url);
         return $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->addNode($label, $url);
     }
 
+    /**
+     * @param string $url
+     * @return boolean|string Return URL if valid plink otherwise FALSE
+     */
     public function tryParsePlink($url)
     {
         try
@@ -108,30 +142,13 @@ class Navigation extends BaseControl
             $netteLink = FALSE;
         }
 
+        // "error" = fix pro vývojové prostředí, kde odkazy začínají error: Presenter... not found
         if ($netteLink != FALSE && Strings::startsWith($netteLink, "error") == FALSE)
         {
             return $netteLink;
         }
 
-        return $url;
-    }
-
-    /**
-     * Setup homepage
-     * @param string $label
-     * @param string $url
-     * @return NavigationNode
-     */
-    public function addHomepage($label, $url)
-    {
-        /* @var $homepage NavigationNode */
-        $homepage = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME);
-
-        $url = $this->tryParsePlink($url);
-        $homepage->setLabel($label)->setUrl($url);
-
-        $this->useHomepage = true;
-        return $homepage;
+        return FALSE;
     }
 
     /**
@@ -215,18 +232,41 @@ class Navigation extends BaseControl
         /* @var $oneNode NavigationNode */
         foreach ($components as $oneNode)
         {
-            if ($currentUrl->isEqual($oneNode->getUrl()))
+            // Node využívá plink
+            if ($oneNode->isPlinkPresent() && ($oneNode->getPlink() == $this->getCurrentNetteRequest()))
+            {
+                return $oneNode;
+            }
+            elseif ($currentUrl->isEqual($oneNode->getUrl())) // Node využívá plnout URL
             {
                 return $oneNode;
             }
         }
 
-        if ($currentUrl->isEqual($base->getUrl()))
+        // Aktuální node může být ta, která se ptá
+        // Node využívá plink
+        if ($base->isPlinkPresent() && ($base->getPlink() == $this->getCurrentNetteRequest()))
+        {
+            return $base;
+        }
+        elseif ($currentUrl->isEqual($base->getUrl())) // Node využívá plnout URL
         {
             return $base;
         }
 
         return FALSE;
+    }
+
+    public function getCurrentNetteRequest()
+    {
+        $presenterName = $this->getCurrentPresenterName();
+        return $presenterName . ":" . $this->presenter->getOperation();
+    }
+
+    public function getCurrentPresenterName()
+    {
+        $moduleAndPresenter = explode(":", $this->presenter->getName());
+        return end($moduleAndPresenter);
     }
 
     /* ----------------------------------------------
@@ -308,6 +348,22 @@ class Navigation extends BaseControl
 
             if ($current)
             {
+                // Aktuální Node je manuálně skrytá, řekneme to předkovi
+                if ($current->iSVisible() === FALSE)
+                {
+                    $current->getParent()->setHasHiddenCurrentChildren(TRUE);
+                }
+                else
+                {
+                    // Aktuální Node je běžně viditelná                   
+                    $allComponents = $this->getComponent(self::HOMEPAGE_COMPONENT_NAME, TRUE)->getComponents();
+
+                    foreach ($allComponents as $oneComponent)
+                    {
+                        $oneComponent->setHasHiddenCurrentChildren(FALSE);
+                    }
+                }
+
                 $this->setCurrentNode($current);
             }
         }

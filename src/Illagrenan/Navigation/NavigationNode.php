@@ -25,14 +25,29 @@ class NavigationNode extends Container
     private $url;
 
     /**
+     * @var string
+     */
+    private $plink;
+
+    /**
      * @var bool
      */
     private $isCurrent;
 
     /**
+     * @var bool
+     */
+    private $hasHiddenCurrentChildren = FALSE;
+
+    /**
      * @var string[]
      */
     private $specialClass = array();
+
+    /**
+     * @var boolean
+     */
+    private $isVisible = TRUE;
 
     /**
      * @param string $label
@@ -53,16 +68,27 @@ class NavigationNode extends Container
      */
     public function addNode($label, $url)
     {
-
         /* @var $homepageComponent Navigation */
         $homepageComponent = $this->lookup("Illagrenan\Navigation\Navigation", FALSE);
-        $url               = $homepageComponent->tryParsePlink($url);
 
+        // Obsahuje FALSE, pokud se nejedná o platný plink
+        $parsedPlink       = $homepageComponent->tryParsePlink($url);
         $newNavigationNode = new NavigationNode($label, $url);
+
+        // Odkaz ve tvaru Presenter:action
+        if ($parsedPlink !== FALSE)
+        {
+            $newNavigationNode->setUrl($parsedPlink);
+            $newNavigationNode->setPlink($url);
+        }
+        else // Obyčejná URL (nekontroluje se)
+        {
+            $newNavigationNode->setUrl($url);
+        }
 
         static $counter;
 
-        $this->addComponent($newNavigationNode, ++$counter);
+        $this->addComponent($newNavigationNode, "IllagrenanNavigationNO" . ++$counter);
 
         return $newNavigationNode;
     }
@@ -74,6 +100,10 @@ class NavigationNode extends Container
 
         return $this;
     }
+
+    /* ----------------------------------------------
+     * *** Getters & Setters ***
+     * ---------------------------------------------- */
 
     public function getIsCurrent()
     {
@@ -149,6 +179,44 @@ class NavigationNode extends Container
     public function setCurrent()
     {
         $this->isCurrent = TRUE;
+        return $this;
+    }
+
+    public function isPlinkPresent()
+    {
+        return (bool) isset($this->plink);
+    }
+
+    public function getPlink()
+    {
+        return $this->plink;
+    }
+
+    public function setPlink($plink)
+    {
+        $this->plink = $plink;
+        return $this;
+    }
+
+    public function iSVisible()
+    {
+        return $this->isVisible;
+    }
+
+    public function setIsVisible($isVisible)
+    {
+        $this->isVisible = (bool) $isVisible;
+        return $this;
+    }
+
+    public function hasHiddenCurrentChildren()
+    {
+        return $this->hasHiddenCurrentChildren;
+    }
+
+    public function setHasHiddenCurrentChildren($hasHiddenCurrentChildren)
+    {
+        $this->hasHiddenCurrentChildren = (bool) $hasHiddenCurrentChildren;
         return $this;
     }
 
